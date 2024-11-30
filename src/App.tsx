@@ -5,7 +5,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<div>Login page</div>} />
-      <Route path="chat" element={<Chat />} />
+      <Route path="/chat" element={<Chat />} />
     </Routes>
   );
 }
