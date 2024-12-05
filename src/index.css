@@ -71,6 +71,12 @@
 
 body {
   font-family: "Rubik", sans-serif;
+  height: 100vh;
+  background-image: url("@/assets/background-image.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  letter-spacing: 0.025em;
 }
 
 /* Scrollbar */
