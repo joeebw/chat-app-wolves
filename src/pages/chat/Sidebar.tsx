@@ -1,21 +1,26 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { SlOptions } from "react-icons/sl";
-import { FaPlus } from "react-icons/fa6";
 import InputSearchUser from "./InputSearchUser";
 import UserListChats from "./UserListChats";
+import { useStore } from "@/store/useStore";
+import AddUserChatModal from "@/pages/chat/AddUserChatModal";
 
 const Sidebar = () => {
+  const currentUser = useStore((state) => state.currentUser);
+
   return (
     <div className="flex flex-col h-full">
       {/* Header Info */}
       <div className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-3">
-          <Avatar className="w-14 h-14">
-            <AvatarImage src="https://avatar.iran.liara.run/public" />
+          <Avatar className="w-16 h-16">
+            <AvatarImage src={currentUser?.photoUrl} />
             <AvatarFallback>Doe</AvatarFallback>
           </Avatar>
-          <h3 className="text-xl font-medium">John Smith</h3>
+          <h3 className="text-xl font-medium line-clamp-1">
+            {currentUser?.displayName}
+          </h3>
         </div>
         <Button size={"icon"} variant="ghost">
           <SlOptions />
@@ -26,9 +31,7 @@ const Sidebar = () => {
       <div className="flex items-center justify-between px-6 mt-8 gap-7">
         <InputSearchUser />
 
-        <Button size="icon">
-          <FaPlus />
-        </Button>
+        <AddUserChatModal />
       </div>
 
       {/* Chat lists */}

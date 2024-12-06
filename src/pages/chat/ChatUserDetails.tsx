@@ -4,13 +4,18 @@ import { IoMdDownload } from "react-icons/io";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { signOut } from "@/lib/firebase";
 
 const ChatUserDetails = () => {
   const [isOpen, setIsOpen] = useState(true);
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {/* User details - static height */}
+      {/* User details */}
       <div className="flex flex-col items-center gap-3 p-8 border-b shrink-0">
         <Avatar className="w-24 h-24">
           <AvatarImage src="https://avatar.iran.liara.run/public" />
@@ -20,7 +25,7 @@ const ChatUserDetails = () => {
         <p className="line-clamp-2">This is awesome I want to be the best.</p>
       </div>
 
-      {/* Accordion section - flexible height */}
+      {/* Accordion section */}
       <div className="flex flex-col flex-1 min-h-0 p-6">
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -72,10 +77,10 @@ const ChatUserDetails = () => {
         </AnimatePresence>
       </div>
 
-      {/* Footer buttons - static height */}
+      {/* Footer buttons */}
       <div className="flex flex-col gap-5 p-6 shrink-0">
         <Button variant="destructive">Block User</Button>
-        <Button>Logout</Button>
+        <Button onClick={handleLogout}>Logout</Button>
       </div>
     </div>
   );

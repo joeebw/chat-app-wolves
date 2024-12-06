@@ -1,18 +1,14 @@
 import { Input } from "@/components/ui/input";
+import { SignInFormData } from "@/pages/login";
 import { UseFormReturn } from "react-hook-form";
 
 type Props = {
-  signInForm: UseFormReturn<
-    {
-      email: string;
-      password: string;
-    },
-    any,
-    undefined
-  >;
+  signInForm: UseFormReturn<SignInFormData, any, undefined>;
 };
 
 const SignInInputs = ({ signInForm }: Props) => {
+  const hasError = !!signInForm.formState.errors.root;
+
   return (
     <>
       <div className="space-y-2">
@@ -31,8 +27,9 @@ const SignInInputs = ({ signInForm }: Props) => {
       <div className="space-y-2">
         <Input
           className="!text-base bg-input-background"
-          type="password"
+          type={hasError ? "text" : "password"}
           placeholder="Password"
+          autoComplete={hasError ? "off" : "current-password"}
           {...signInForm.register("password")}
         />
         {signInForm.formState.errors.password && (
