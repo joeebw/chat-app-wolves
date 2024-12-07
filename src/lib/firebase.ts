@@ -1,4 +1,4 @@
-import { User } from "@/ts/types";
+import { Chat, User } from "@/ts/types";
 import { initializeApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -8,7 +8,18 @@ import {
   User as FirebaseUser,
   getAuth,
 } from "firebase/auth";
-import { doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import axios from "axios";
 import { SignUpFormData } from "@/pages/login";
 
@@ -25,7 +36,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Funciones relacionadas con usuarios
 export const createUser = async (
   userData: Omit<User, "createdAt" | "lastActive">
 ) => {
@@ -81,7 +91,6 @@ export const signUp = async (data: SignUpFormData) => {
       throw new Error("Photo url is undefined");
     }
 
-    // 1. Crear el usuario en Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -89,20 +98,19 @@ export const signUp = async (data: SignUpFormData) => {
     );
     const user = userCredential.user;
 
-    // 2. Actualizar el perfil con displayName y photo
     await updateProfile(user, {
       displayName,
       photoURL,
     });
     console.log("updated profile");
 
-    // 3. Crear el documento del usuario en Firestore
     await createUser({
       uid: user.uid,
       email: user.email!,
       displayName,
       photoURL,
       status: quote,
+      displayNameLowerCase: displayName.toLowerCase(),
     });
 
     console.log("user created and register");
@@ -114,6 +122,132 @@ export const signUp = async (data: SignUpFormData) => {
   }
 };
 
+export const getUserData = async (userId: string) => {
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) return null;
+  return { ...userSnap.data(), uid: userSnap.id } as User;
+};
+
 export const signOut = async (): Promise<void> => {
   await firebaseSignOut(auth);
+};
+
+export const searchUsers = async (searchTerm: string) => {
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(
+      usersRef,
+      where("displayNameLowerCase", ">=", searchTerm),
+      where("displayNameLowerCase", "<=", searchTerm + "\uf8ff")
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          ...doc.data(),
+          uid: doc.id,
+        } as User)
+    );
+  } catch (error) {
+    console.error("Error searching users:", error);
+    throw error;
+  }
+};
+
+export const getUserChats = async (userId: string) => {
+  try {
+    const chatsRef = collection(db, "chats");
+    const q = query(chatsRef, where("participants", "array-contains", userId));
+    const chatSnapshot = await getDocs(q);
+
+    const chatsPromises = chatSnapshot.docs.map(async (chatDoc) => {
+      const chatData = chatDoc.data();
+
+      const otherUserId = chatData.participants.find(
+        (id: string) => id !== userId
+      );
+
+      const userDoc = await getDoc(doc(db, "users", otherUserId));
+      const userData = userDoc.data();
+
+      return {
+        id: chatDoc.id,
+        lastMessage: chatData.lastMessage,
+        participants: chatData.participants,
+        user: {
+          uid: userDoc.id,
+          displayName: userData?.displayName,
+          photoURL: userData?.photoURL,
+          status: userData?.status,
+        },
+      };
+    });
+
+    const chats = await Promise.all(chatsPromises);
+
+    return chats.sort((a, b) => {
+      if (!a.lastMessage?.timestamp) return 1;
+      if (!b.lastMessage?.timestamp) return -1;
+      return (
+        b.lastMessage.timestamp.getTime() - a.lastMessage.timestamp.getTime()
+      );
+    }) as Chat[];
+  } catch (error) {
+    console.error("Error fetching user chats:", error);
+    throw error;
+  }
+};
+
+export const fetchExistingChats = async (userId: string) => {
+  try {
+    const chatsRef = collection(db, "chats");
+    const q = query(chatsRef, where("participants", "array-contains", userId));
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.reduce((acc: string[], doc) => {
+      const chatData = doc.data();
+
+      const otherParticipant = chatData.participants.find(
+        (id: string) => id !== userId
+      );
+      if (otherParticipant) acc.push(otherParticipant);
+      return acc;
+    }, []);
+  } catch (error) {
+    console.error("Error fetching existing chats:", error);
+    throw error;
+  }
+};
+
+export const createChat = async (participants: string[]) => {
+  try {
+    const chatsRef = collection(db, "chats");
+    const chatDoc = await addDoc(chatsRef, {
+      participants,
+      createdAt: serverTimestamp(),
+      lastMessage: null,
+    });
+
+    await Promise.all(
+      participants.map((userId) =>
+        setDoc(doc(db, "userChats", `${userId}_${chatDoc.id}`), {
+          userId,
+          chatId: chatDoc.id,
+          unreadCount: 0,
+          lastReadTimestamp: serverTimestamp(),
+          isBlocked: false,
+        })
+      )
+    );
+
+    console.log("chat created");
+
+    return chatDoc.id;
+  } catch (error) {
+    console.error("Error creating chat:", error);
+    throw error;
+  }
 };

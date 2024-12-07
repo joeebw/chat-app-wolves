@@ -97,6 +97,7 @@ const LoginPage = () => {
   const handleSignUp = async (data: SignUpFormData) => {
     try {
       await signUp(data);
+      setIsSignIn();
       navigate("/chat", { replace: true });
     } catch (error: any) {
       let errorMessage;

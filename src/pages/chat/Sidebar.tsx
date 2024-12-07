@@ -5,9 +5,16 @@ import InputSearchUser from "./InputSearchUser";
 import UserListChats from "./UserListChats";
 import { useStore } from "@/store/useStore";
 import AddUserChatModal from "@/pages/chat/AddUserChatModal";
+import { useQuery } from "@tanstack/react-query";
+import { getUserData } from "@/lib/firebase";
 
 const Sidebar = () => {
   const currentUser = useStore((state) => state.currentUser);
+  const { data } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => getUserData(currentUser!.uid),
+    enabled: !!currentUser,
+  });
 
   return (
     <div className="flex flex-col h-full">
@@ -15,11 +22,11 @@ const Sidebar = () => {
       <div className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-3">
           <Avatar className="w-16 h-16">
-            <AvatarImage src={currentUser?.photoUrl} />
+            <AvatarImage src={data?.photoURL} />
             <AvatarFallback>Doe</AvatarFallback>
           </Avatar>
           <h3 className="text-xl font-medium line-clamp-1">
-            {currentUser?.displayName}
+            {data?.displayName}
           </h3>
         </div>
         <Button size={"icon"} variant="ghost">
