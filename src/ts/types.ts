@@ -33,3 +33,28 @@ export interface Chat {
   participants: string[];
   user: ChatUser;
 }
+
+export interface Message {
+  id: string;
+  content: string;
+  senderId: string;
+  senderName?: string;
+  senderPhotoURL?: string;
+  timestamp: Date;
+  type: "text" | "image";
+  chatId: string;
+}
+
+export interface SendMessageParams {
+  chatId: string;
+  content: string;
+  senderId: string;
+  type: "text" | "image";
+}
+
+export interface SharedPhoto {
+  id: string;
+  imageUrl: string;
+  fileName: string;
+  timestamp: Date;
+}

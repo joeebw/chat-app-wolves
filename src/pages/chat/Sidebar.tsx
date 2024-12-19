@@ -6,15 +6,32 @@ import UserListChats from "./UserListChats";
 import { useStore } from "@/store/useStore";
 import AddUserChatModal from "@/pages/chat/AddUserChatModal";
 import { useQuery } from "@tanstack/react-query";
-import { getUserData } from "@/lib/firebase";
+import { getUserChats, getUserData } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { Chat } from "@/ts/types";
 
 const Sidebar = () => {
+  const [chatList, setChatList] = useState<Chat[] | undefined>();
   const currentUser = useStore((state) => state.currentUser);
+
   const { data } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => getUserData(currentUser!.uid),
     enabled: !!currentUser,
   });
+
+  const { data: chats } = useQuery({
+    queryKey: ["currentUser Chats"],
+    queryFn: () => getUserChats(currentUser!.uid),
+    refetchInterval: 3 * 60 * 1000,
+    enabled: !!currentUser,
+  });
+
+  useEffect(() => {
+    if (chats) {
+      setChatList(chats);
+    }
+  }, [chats]);
 
   return (
     <div className="flex flex-col h-full">
@@ -36,14 +53,14 @@ const Sidebar = () => {
 
       {/* Search User and user to char */}
       <div className="flex items-center justify-between px-6 mt-8 gap-7">
-        <InputSearchUser />
+        <InputSearchUser setChatList={setChatList} chats={chats} />
 
         <AddUserChatModal />
       </div>
 
       {/* Chat lists */}
       <div className="flex-1 min-h-0 overflow-y-auto mt-9">
-        <UserListChats />
+        <UserListChats chatList={chatList} />
       </div>
     </div>
   );

@@ -1,4 +1,10 @@
-import { Chat, User } from "@/ts/types";
+import {
+  Chat,
+  Message,
+  SendMessageParams,
+  SharedPhoto,
+  User,
+} from "@/ts/types";
 import { initializeApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -15,9 +21,13 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  limit,
+  onSnapshot,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import axios from "axios";
@@ -250,4 +260,106 @@ export const createChat = async (participants: string[]) => {
     console.error("Error creating chat:", error);
     throw error;
   }
+};
+
+export const getChatMessages = (
+  chatId: string,
+  callback: (messages: Message[]) => void
+) => {
+  const messagesRef = collection(db, "messages");
+  const q = query(
+    messagesRef,
+    where("chatId", "==", chatId),
+    orderBy("timestamp", "asc")
+  );
+
+  return onSnapshot(q, async (snapshot) => {
+    const messagesPromises = snapshot.docs.map(async (docSnapshot) => {
+      const data = docSnapshot.data();
+      const userDoc = await getDoc(doc(db, "users", data.senderId));
+      const userData = userDoc.data();
+
+      return {
+        id: docSnapshot.id,
+        ...data,
+        senderName: userData?.displayName,
+        senderPhotoURL: userData?.photoURL,
+        timestamp: data.timestamp?.toDate(),
+      } as Message;
+    });
+
+    const messages = await Promise.all(messagesPromises);
+    callback(messages);
+  });
+};
+
+export const sendMessage = async ({
+  chatId,
+  content,
+  senderId,
+  type,
+}: SendMessageParams) => {
+  try {
+    await addDoc(collection(db, "messages"), {
+      chatId,
+      content,
+      senderId,
+      type,
+      timestamp: serverTimestamp(),
+    });
+
+    await updateDoc(doc(db, "chats", chatId), {
+      lastMessage: {
+        content: type === "image" ? "Image" : content,
+        senderId,
+        timestamp: serverTimestamp(),
+      },
+    });
+  } catch (error) {
+    console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
+export const uploadImageMessage = async (
+  file: File,
+  chatId: string,
+  senderId: string
+) => {
+  const imageUrl = await uploadImageToImgBB(file);
+
+  await sendMessage({
+    chatId,
+    content: imageUrl,
+    senderId,
+    type: "image",
+  });
+};
+
+export const getSharedPhotos = async (chatId: string) => {
+  console.log("Running getSharedPhotos");
+
+  const q = query(
+    collection(db, "messages"),
+    where("chatId", "==", chatId),
+    where("type", "==", "image"),
+    orderBy("timestamp", "desc")
+  );
+
+  const snapshot = await getDocs(q);
+  console.log("snapshot", snapshot);
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    const fileName =
+      data.fileName ||
+      `Image_${
+        new Date(data.timestamp?.toDate()).toLocaleString().split(",")[0]
+      }_${Date.now() % 10000}.jpg`;
+    return {
+      id: doc.id,
+      imageUrl: data.content,
+      fileName,
+      timestamp: data.timestamp?.toDate(),
+    };
+  });
 };
