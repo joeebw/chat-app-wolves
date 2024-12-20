@@ -1,14 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import formatMessageTime from "@/lib/formatMessageTime";
+import ReceiverMessage from "@/pages/chat/ReceiverMessage";
+import SenderMessage from "@/pages/chat/SenderMessage";
 import { useMessages } from "@/pages/chat/useMessages";
 import { useStore } from "@/store/useStore";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { BeatLoader } from "react-spinners";
 
 const ChatMessages = () => {
-  const [imageLoading, setImageLoading] = useState(true);
   const selectedChatId = useStore((state) => state.selectedChatId);
   const currentUser = useStore((state) => state.currentUser);
   const { messages, loading } = useMessages(selectedChatId);
@@ -52,62 +49,10 @@ const ChatMessages = () => {
         const isSender = message.senderId === currentUser?.uid;
 
         if (isSender) {
-          return (
-            <div key={message.id} className="self-end max-w-[50%]">
-              <Card className="border-none">
-                <CardContent className="p-3">
-                  {message.type === "image" ? (
-                    <img
-                      src={message.content}
-                      alt="shared"
-                      className="w-full rounded-2xl"
-                    />
-                  ) : (
-                    message.content
-                  )}
-                </CardContent>
-              </Card>
-              <span className="text-sm text-gray-300">
-                {formatMessageTime(message?.timestamp)}
-              </span>
-            </div>
-          );
+          return <SenderMessage message={message} key={message.id} />;
         }
 
-        return (
-          <div
-            key={message.id}
-            className={`flex gap-3 max-w-[${
-              message.type === "image" ? "70%" : "50%"
-            }]`}
-          >
-            <Avatar className="w-9 h-9">
-              <AvatarImage
-                src={
-                  message.senderPhotoURL ||
-                  "https://avatar.iran.liara.run/public"
-                }
-              />
-              <AvatarFallback>{message.senderName?.[0] || "U"}</AvatarFallback>
-            </Avatar>
-            <div>
-              {message.type === "image" ? (
-                <img
-                  src={message.content}
-                  alt="shared"
-                  className="w-full rounded-2xl"
-                />
-              ) : (
-                <Card className="self-start border-none bg-card-secondary">
-                  <CardContent className="p-3">{message.content}</CardContent>
-                </Card>
-              )}
-              <span className="text-sm text-gray-300">
-                {formatMessageTime(message.timestamp)}
-              </span>
-            </div>
-          </div>
-        );
+        return <ReceiverMessage message={message} />;
       })}
 
       {/* Scroll to this point */}
