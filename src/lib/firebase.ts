@@ -30,6 +30,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import axios from "axios";
 import { SignUpFormData } from "@/pages/login";
@@ -422,4 +423,34 @@ export const subscribeToBlockStatus = (
     unsubscribeMe();
     unsubscribeOther();
   };
+};
+
+export const deleteChat = async (chatId: string, participants: string[]) => {
+  const batch = writeBatch(db);
+
+  try {
+    // Eliminar mensajes del chat
+    const messagesRef = collection(db, "messages");
+    const q = query(messagesRef, where("chatId", "==", chatId));
+    const messagesSnapshot = await getDocs(q);
+    messagesSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Eliminar userChats para ambos participantes
+    participants.forEach((userId) => {
+      const userChatRef = doc(db, "userChats", `${userId}_${chatId}`);
+      batch.delete(userChatRef);
+    });
+
+    // Eliminar el documento principal del chat
+    const chatRef = doc(db, "chats", chatId);
+    batch.delete(chatRef);
+
+    await batch.commit();
+    console.log("Chat deleted");
+  } catch (error) {
+    console.error("Error in batch delete:", error);
+    throw error;
+  }
 };

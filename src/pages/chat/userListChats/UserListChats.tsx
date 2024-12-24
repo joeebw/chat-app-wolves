@@ -4,6 +4,9 @@ import { useMultipleBlockStatus } from "@/hooks/useMultipleBlockStatus";
 import { useStore } from "@/store/useStore";
 import { Chat } from "@/ts/types";
 import BlockedUserImg from "@/assets/blocked-user.png";
+import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
+import DropdownChat from "@/pages/chat/userListChats/DropdownChat";
+import ModalConfirmRemoveChat from "@/pages/chat/userListChats/ModalConfirmRemoveChat";
 
 type Props = {
   chatList: Chat[] | undefined;
@@ -116,34 +119,40 @@ const UserListChats = ({ chatList }: Props) => {
 
   return (
     <>
+      <ModalConfirmRemoveChat />
       {chatList?.map(
         ({ id, user: { displayName, photoURL, uid }, lastMessage }) => {
           const isBlocked = blockStatuses[id];
 
           return (
             <div key={id} onClick={() => handleSelectUserIdAndChatId(id, uid)}>
-              <div className="flex items-center gap-4 px-6 py-4 transition-all cursor-pointer hover:bg-accent">
-                <Avatar className="w-14 h-14">
-                  <AvatarImage src={isBlocked ? BlockedUserImg : photoURL} />
-                  <AvatarFallback>{displayName}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col gap-1.5">
-                  <h4 className="font-medium line-clamp-1">{displayName}</h4>
-                  {/* Last message */}
-                  <p className="text-sm line-clamp-1">
-                    {lastMessage?.content ? (
-                      lastMessage.content === "Image" ? (
-                        "Image 📷"
+              <div className="flex items-center justify-between px-6 py-4 transition-all cursor-pointer hover:bg-gray-500">
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="w-14 h-14">
+                    <AvatarImage src={isBlocked ? BlockedUserImg : photoURL} />
+                    <AvatarFallback>{displayName}</AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex flex-col gap-1.5">
+                    <h4 className="font-medium line-clamp-1">{displayName}</h4>
+                    {/* Last message */}
+                    <p className="text-sm line-clamp-1">
+                      {lastMessage?.content ? (
+                        lastMessage.content === "Image" ? (
+                          "Image 📷"
+                        ) : (
+                          lastMessage.content
+                        )
                       ) : (
-                        lastMessage.content
-                      )
-                    ) : (
-                      <span className="text-gray-400">
-                        There are no messages yet...
-                      </span>
-                    )}
-                  </p>
+                        <span className="text-gray-400">
+                          There are no messages yet...
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
+
+                <DropdownChat />
               </div>
               <Separator />
             </div>

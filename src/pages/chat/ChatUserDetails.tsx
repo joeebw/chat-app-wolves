@@ -22,10 +22,6 @@ const ChatUserDetails = () => {
 
   const avatarImage = isBlocked ? BlockedUserImg : userData?.photoURL;
 
-  console.log("isBlocked: ", isBlocked);
-  console.log("blockedByMe: ", blockedByMe);
-  console.log("blockedByOther: ", blockedByOther);
-
   const handleLogout = async () => {
     await signOut();
     resetStore();

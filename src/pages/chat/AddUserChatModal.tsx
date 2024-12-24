@@ -50,7 +50,7 @@ const AddUserChatModal = () => {
     setLoading(true);
     try {
       const results = await searchUsers(searchTerm.toLowerCase());
-      // Filtrar el usuario actual de los resultados
+
       const filteredUsers = results.filter(
         (user) => user.uid !== currentUser?.uid
       );

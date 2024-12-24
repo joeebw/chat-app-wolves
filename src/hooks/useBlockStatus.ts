@@ -18,8 +18,6 @@ const useBlockStatus = (
       currentUserId,
       selectedUserId,
       (byMe, byOther) => {
-        console.log("byMe: ", byMe);
-        console.log("byOther: ", byOther);
         setBlockedByMe(byMe);
         setBlockedByOther(byOther);
         setLoading(false);

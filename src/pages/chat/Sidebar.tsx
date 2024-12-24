@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { SlOptions } from "react-icons/sl";
 import InputSearchUser from "./InputSearchUser";
-import UserListChats from "./UserListChats";
+import UserListChats from "./userListChats/UserListChats";
 import { useStore } from "@/store/useStore";
 import AddUserChatModal from "@/pages/chat/AddUserChatModal";
 import { useQuery } from "@tanstack/react-query";
