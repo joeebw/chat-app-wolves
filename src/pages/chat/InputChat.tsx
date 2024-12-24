@@ -9,6 +9,8 @@ import { SendMessageParams } from "@/ts/types";
 import { useStore } from "@/store/useStore";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import useBlockStatus from "@/hooks/useBlockStatus";
+import clsx from "clsx";
 
 const InputChat = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -20,6 +22,15 @@ const InputChat = () => {
   const currentUser = useStore((state) => state.currentUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+
+  const selectedUserId = useStore((state) => state.selectedUserId);
+  const currentUserId = currentUser?.uid;
+
+  const { isBlocked, blockedByMe, blockedByOther } = useBlockStatus(
+    currentUserId!,
+    selectedUserId!,
+    selectedChatId!
+  );
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,6 +86,7 @@ const InputChat = () => {
       onSubmit={handleSendMessage}
     >
       <input
+        disabled={isBlocked}
         type="file"
         accept="image/*"
         className="hidden"
@@ -90,23 +102,31 @@ const InputChat = () => {
         size="icon"
         className="p-5"
         type="button"
-        disabled={isUploadingImage}
+        disabled={isUploadingImage || isBlocked}
         onClick={() => fileInputRef.current?.click()}
       >
         {isUploadingImage ? (
           <Loader2 className="animate-spin" />
         ) : (
-          <FaImage className="transform scale-[1.3]" />
+          <FaImage className={clsx("transform scale-[1.3]")} />
         )}
       </Button>
 
       <Input
+        disabled={isBlocked}
         className="!text-base bg-input-background h-12"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Type a message..."
+        placeholder={
+          blockedByOther
+            ? "You have been blocked by this user"
+            : blockedByMe
+            ? "You have blocked this user"
+            : "Type a message..."
+        }
       />
       <Button
+        disabled={isBlocked}
         type="button"
         ref={buttonRef}
         variant="ghost"
@@ -116,13 +136,14 @@ const InputChat = () => {
       >
         <BsEmojiSmile className="transform scale-[1.3]" />
       </Button>
+
       {showEmojiPicker && (
         <div ref={pickerRef} className="absolute right-0 mb-2 bottom-20">
           <EmojiPicker onEmojiClick={onEmojiClick} width={300} height={400} />
         </div>
       )}
 
-      <Button variant="secondary" type="submit">
+      <Button variant="secondary" type="submit" disabled={isBlocked}>
         Send
       </Button>
     </form>

@@ -1,7 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import useBlockStatus from "@/hooks/useBlockStatus";
 import useGetUserInfoCurrentChat from "@/pages/chat/useGetUserInfoCurrentChat";
 import { useStore } from "@/store/useStore";
+import BlockedUserImg from "@/assets/blocked-user.png";
 
 import clsx from "clsx";
 import { IoIosInformationCircle } from "react-icons/io";
@@ -9,6 +11,16 @@ import { IoIosInformationCircle } from "react-icons/io";
 const ChatUserInfo = () => {
   const selectedUserId = useStore((state) => state.selectedUserId);
   const { isLoading, data: userData } = useGetUserInfoCurrentChat();
+  const currentUserId = useStore((state) => state.currentUser?.uid);
+  const selectedChatId = useStore((state) => state.selectedChatId);
+
+  const { isBlocked } = useBlockStatus(
+    currentUserId!,
+    selectedUserId!,
+    selectedChatId!
+  );
+
+  const avatarImage = isBlocked ? BlockedUserImg : userData?.photoURL;
 
   if (isLoading) {
     return (
@@ -26,7 +38,7 @@ const ChatUserInfo = () => {
     <div className="flex items-center justify-between p-4 border-b">
       <div className={clsx("flex gap-4 items-center")}>
         <Avatar className="w-14 h-14">
-          <AvatarImage src={userData?.photoURL} />
+          <AvatarImage src={avatarImage} />
           <AvatarFallback>
             <Avatar className="w-14 h-14">
               <AvatarImage src={"https://avatar.iran.liara.run/public"} />

@@ -4,6 +4,7 @@ import {
   SendMessageParams,
   SharedPhoto,
   User,
+  UserChatData,
 } from "@/ts/types";
 import { initializeApp } from "firebase/app";
 import {
@@ -154,6 +155,7 @@ export const searchUsers = async (searchTerm: string) => {
     );
 
     const snapshot = await getDocs(q);
+
     return snapshot.docs.map(
       (doc) =>
         ({
@@ -347,7 +349,6 @@ export const getSharedPhotos = async (chatId: string) => {
   );
 
   const snapshot = await getDocs(q);
-  console.log("snapshot", snapshot);
   return snapshot.docs.map((doc) => {
     const data = doc.data();
     const fileName =
@@ -362,4 +363,63 @@ export const getSharedPhotos = async (chatId: string) => {
       timestamp: data.timestamp?.toDate(),
     };
   });
+};
+
+export const toggleBlockUser = async (
+  currentUserId: string,
+  chatId: string
+) => {
+  try {
+    const userChatRef = doc(db, "userChats", `${currentUserId}_${chatId}`);
+    const userChatDoc = await getDoc(userChatRef);
+    const userData = userChatDoc.data() as UserChatData;
+
+    const currentBlockedBy = userData.blockedBy || {};
+    const isCurrentlyBlocked = currentBlockedBy[currentUserId] || false;
+
+    await updateDoc(userChatRef, {
+      [`blockedBy.${currentUserId}`]: !isCurrentlyBlocked,
+      isBlocked: !isCurrentlyBlocked,
+    });
+
+    return !isCurrentlyBlocked;
+  } catch (error) {
+    console.error("Error toggling block status:", error);
+    throw error;
+  }
+};
+
+export const subscribeToBlockStatus = (
+  chatId: string,
+  currentUserId: string,
+  otherUserId: string,
+  onBlockStatusChange: (blockedByMe: boolean, blockedByOther: boolean) => void
+) => {
+  let currentBlockedByMe = false;
+  let currentBlockedByOther = false;
+
+  // Escuchar cambios en mi documento
+  const unsubscribeMe = onSnapshot(
+    doc(db, "userChats", `${currentUserId}_${chatId}`),
+    (doc) => {
+      const data = doc.data() as UserChatData;
+      currentBlockedByMe = data?.blockedBy?.[currentUserId] || false;
+      onBlockStatusChange(currentBlockedByMe, currentBlockedByOther);
+    }
+  );
+
+  // Escuchar cambios en el documento del otro usuario
+  const unsubscribeOther = onSnapshot(
+    doc(db, "userChats", `${otherUserId}_${chatId}`),
+    (doc) => {
+      const data = doc.data() as UserChatData;
+      currentBlockedByOther = data?.blockedBy?.[otherUserId] || false;
+      onBlockStatusChange(currentBlockedByMe, currentBlockedByOther);
+    }
+  );
+
+  return () => {
+    unsubscribeMe();
+    unsubscribeOther();
+  };
 };

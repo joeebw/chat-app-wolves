@@ -58,3 +58,9 @@ export interface SharedPhoto {
   fileName: string;
   timestamp: Date;
 }
+
+export interface UserChatData {
+  blockedBy?: {
+    [key: string]: boolean;
+  };
+}

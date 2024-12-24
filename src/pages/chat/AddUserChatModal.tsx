@@ -14,6 +14,7 @@ import { useStore } from "@/store/useStore";
 import { createChat, fetchExistingChats, searchUsers } from "@/lib/firebase";
 import { User } from "@/ts/types";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AddUserChatModal = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +24,7 @@ const AddUserChatModal = () => {
   const [error, setError] = useState("");
   const [existingChats, setExistingChats] = useState<string[]>([]);
   const currentUser = useStore((state) => state.currentUser);
+  const queryClient = useQueryClient();
 
   const resetStates = () => {
     setSearchTerm("");
@@ -61,6 +63,7 @@ const AddUserChatModal = () => {
       setLoading(false);
     }
   };
+
   const handleAddUser = async (userToAdd: User) => {
     if (!currentUser) return;
 
@@ -70,9 +73,9 @@ const AddUserChatModal = () => {
       await createChat([currentUser.uid, userToAdd.uid]);
 
       setExistingChats((prev) => [...prev, userToAdd.uid]);
-
       setSearchTerm("");
       setError("");
+      queryClient.invalidateQueries({ queryKey: ["currentUser Chats"] });
     } catch (err) {
       setError("Error adding user");
       console.error(err);
