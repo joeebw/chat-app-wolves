@@ -9,21 +9,17 @@ import { useQuery } from "@tanstack/react-query";
 import { getUserChats, getUserData } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 import { Chat } from "@/ts/types";
+import useGetCurrentUserChats from "@/pages/chat/useGetCurrentUserChats";
 
 const Sidebar = () => {
   const [chatList, setChatList] = useState<Chat[] | undefined>();
   const currentUser = useStore((state) => state.currentUser);
 
+  const { data: chats } = useGetCurrentUserChats();
+
   const { data } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => getUserData(currentUser!.uid),
-    enabled: !!currentUser,
-  });
-
-  const { data: chats } = useQuery({
-    queryKey: ["currentUser Chats"],
-    queryFn: () => getUserChats(currentUser!.uid),
-    refetchInterval: 3 * 60 * 1000,
     enabled: !!currentUser,
   });
 

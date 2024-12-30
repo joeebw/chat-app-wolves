@@ -54,6 +54,7 @@ const AddUserChatModal = () => {
       const filteredUsers = results.filter(
         (user) => user.uid !== currentUser?.uid
       );
+      console.log("filteredUsers", filteredUsers);
       setUsers(filteredUsers);
       setError("");
     } catch (error) {
