@@ -1,0 +1,17 @@
+[build]
+  command = "pnpm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = [
+    "node_modules/axios/**",
+    "node_modules/busboy/**",
+    "node_modules/form-data/**"
+  ]
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
