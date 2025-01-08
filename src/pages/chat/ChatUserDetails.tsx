@@ -17,9 +17,11 @@ const ChatUserDetails = () => {
   const selectedChatId = useStore((state) => state.selectedChatId);
 
   const { data: userData, isLoading } = useGetUserInfoCurrentChat();
-  console.log("userData", userData);
-  const { isBlocked, blockedByMe, blockedByOther, toggleBlock } =
-    useBlockStatus(currentUserId!, selectedUserId!, selectedChatId!);
+  const { isBlocked, blockedByMe, toggleBlock } = useBlockStatus(
+    currentUserId!,
+    selectedUserId!,
+    selectedChatId!
+  );
 
   const avatarImage = isBlocked ? BlockedUserImg : userData?.photoURL;
 

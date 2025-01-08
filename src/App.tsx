@@ -5,6 +5,7 @@ import useAuth from "@/hooks/useAuth";
 import RedirectIfAuthenticated from "@/components/RedirectIfAuthenticated";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFoundPage from "@/components/NotFoundPage";
+import DesktopOnly from "@/components/DesktopOnly";
 
 function App() {
   const { isLoading } = useAuth();
@@ -12,25 +13,27 @@ function App() {
   if (isLoading) return null;
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <RedirectIfAuthenticated>
-            <LoginPage />
-          </RedirectIfAuthenticated>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <Chat />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <DesktopOnly>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <RedirectIfAuthenticated>
+              <LoginPage />
+            </RedirectIfAuthenticated>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </DesktopOnly>
   );
 }
 

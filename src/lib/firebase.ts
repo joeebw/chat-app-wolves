@@ -2,7 +2,6 @@ import {
   Chat,
   Message,
   SendMessageParams,
-  SharedPhoto,
   User,
   UserChatData,
 } from "@/ts/types";
@@ -12,7 +11,6 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
-  User as FirebaseUser,
   getAuth,
 } from "firebase/auth";
 import {
@@ -22,7 +20,6 @@ import {
   getDoc,
   getDocs,
   getFirestore,
-  limit,
   onSnapshot,
   orderBy,
   query,
@@ -60,15 +57,13 @@ export const createUser = async (
   });
 };
 
-const uploadImageToImgBB = async (image: File) => {
+const uploadImageToImgBB = async (file: File) => {
   const formData = new FormData();
-  formData.append("image", image);
+  formData.append("image", file);
 
   try {
-    const response = await axios.post(
-      `https://api.imgbb.com/1/upload?key=${
-        import.meta.env.VITE_IMGBB_API_KEY
-      }`,
+    const { data } = await axios.post(
+      "/.netlify/functions/uploadImages",
       formData,
       {
         headers: {
@@ -76,10 +71,10 @@ const uploadImageToImgBB = async (image: File) => {
         },
       }
     );
-
-    return response.data.data.url;
+    return data.url;
   } catch (error) {
-    throw new Error(`Error uploading image: ${error}`);
+    console.error("Error uploading image:", error);
+    throw error;
   }
 };
 
@@ -204,9 +199,11 @@ export const getUserChats = async (userId: string) => {
     return chats.sort((a, b) => {
       if (!a.lastMessage?.timestamp) return 1;
       if (!b.lastMessage?.timestamp) return -1;
-      return (
-        b.lastMessage.timestamp.getTime() - a.lastMessage.timestamp.getTime()
-      );
+
+      const timestampA = new Date(a.lastMessage.timestamp.seconds * 1000);
+      const timestampB = new Date(b.lastMessage.timestamp.seconds * 1000);
+
+      return timestampB.getTime() - timestampA.getTime();
     }) as Chat[];
   } catch (error) {
     console.error("Error fetching user chats:", error);
@@ -340,8 +337,6 @@ export const uploadImageMessage = async (
 };
 
 export const getSharedPhotos = async (chatId: string) => {
-  console.log("Running getSharedPhotos");
-
   const q = query(
     collection(db, "messages"),
     where("chatId", "==", chatId),
@@ -399,7 +394,6 @@ export const subscribeToBlockStatus = (
   let currentBlockedByMe = false;
   let currentBlockedByOther = false;
 
-  // Escuchar cambios en mi documento
   const unsubscribeMe = onSnapshot(
     doc(db, "userChats", `${currentUserId}_${chatId}`),
     (doc) => {
@@ -409,7 +403,6 @@ export const subscribeToBlockStatus = (
     }
   );
 
-  // Escuchar cambios en el documento del otro usuario
   const unsubscribeOther = onSnapshot(
     doc(db, "userChats", `${otherUserId}_${chatId}`),
     (doc) => {
@@ -429,7 +422,6 @@ export const deleteChat = async (chatId: string, participants: string[]) => {
   const batch = writeBatch(db);
 
   try {
-    // Eliminar mensajes del chat
     const messagesRef = collection(db, "messages");
     const q = query(messagesRef, where("chatId", "==", chatId));
     const messagesSnapshot = await getDocs(q);
@@ -437,13 +429,11 @@ export const deleteChat = async (chatId: string, participants: string[]) => {
       batch.delete(doc.ref);
     });
 
-    // Eliminar userChats para ambos participantes
     participants.forEach((userId) => {
       const userChatRef = doc(db, "userChats", `${userId}_${chatId}`);
       batch.delete(userChatRef);
     });
 
-    // Eliminar el documento principal del chat
     const chatRef = doc(db, "chats", chatId);
     batch.delete(chatRef);
 

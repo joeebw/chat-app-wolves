@@ -42,6 +42,7 @@ const InputChat = () => {
       type: "text",
     };
     await sendMessage(message);
+    queryClient.invalidateQueries({ queryKey: ["currentUser Chats"] });
     setInputValue("");
   };
 

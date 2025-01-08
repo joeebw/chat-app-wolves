@@ -1,22 +1,34 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getChatMessages } from "@/lib/firebase";
+import { useEffect } from "react";
 import { Message } from "@/ts/types";
-import { useState, useEffect } from "react";
 
 export const useMessages = (chatId: string | null) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!chatId) return;
-
-    setLoading(true);
     const unsubscribe = getChatMessages(chatId, (newMessages) => {
-      setMessages(newMessages);
-      setLoading(false);
+      queryClient.setQueryData(["messages", chatId], newMessages);
+      queryClient.invalidateQueries({ queryKey: ["sharedPhotos", chatId] });
     });
-
     return () => unsubscribe();
-  }, [chatId]);
+  }, [chatId, queryClient]);
 
-  return { messages, loading };
+  const { data: messages, isLoading } = useQuery({
+    queryKey: ["messages", chatId],
+    queryFn: () =>
+      new Promise<Message[]>((resolve) => {
+        getChatMessages(chatId!, (initialMessages) => {
+          resolve(initialMessages);
+        });
+      }),
+    enabled: !!chatId,
+    staleTime: Infinity,
+  });
+
+  return {
+    messages: messages || [],
+    loading: isLoading,
+  };
 };

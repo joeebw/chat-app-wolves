@@ -52,7 +52,7 @@ const ChatMessages = () => {
           return <SenderMessage message={message} key={message.id} />;
         }
 
-        return <ReceiverMessage message={message} />;
+        return <ReceiverMessage message={message} key={message.id} />;
       })}
 
       {/* Scroll to this point */}

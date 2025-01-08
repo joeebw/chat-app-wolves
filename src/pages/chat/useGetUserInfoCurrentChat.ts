@@ -10,20 +10,27 @@ const useGetUserInfoCurrentChat = () => {
 
   const { data: chats } = useGetCurrentUserChats();
 
-  const isUserInChats = chats?.some((chat) =>
-    chat.participants.includes(selectedUserId!)
-  );
+  const isUserInChats = chats
+    ? chats.some((chat) => chat.participants.includes(selectedUserId!))
+    : true;
+
+  const shouldEnableQuery =
+    !!selectedUserId &&
+    (chats
+      ? chats.some((chat) => chat.participants.includes(selectedUserId))
+      : false);
 
   useEffect(() => {
-    if (!isUserInChats) {
+    if (chats && !isUserInChats) {
+      console.log("User is not in chats 🎈");
       setSelectedUserId(null);
     }
-  }, [isUserInChats]);
+  }, [isUserInChats, chats]);
 
   return useQuery({
     queryKey: ["current chat", selectedUserId],
     queryFn: () => getUserData(selectedUserId!),
-    enabled: !!selectedUserId && isUserInChats,
+    enabled: !!selectedUserId && shouldEnableQuery,
   });
 };
 

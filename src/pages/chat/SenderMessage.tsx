@@ -13,9 +13,9 @@ export default function SenderMessage({ message }: Props) {
   const [imageLoading, setImageLoading] = useState(true);
 
   return (
-    <div className="self-end max-w-[50%]">
+    <div className="self-end max-w-[55%]">
       <Card className="border-none bg-blue-950">
-        <CardContent className="p-3">
+        <CardContent className="p-1.5">
           {message.type === "image" ? (
             <div
               className={clsx(

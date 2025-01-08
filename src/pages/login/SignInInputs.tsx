@@ -7,8 +7,6 @@ type Props = {
 };
 
 const SignInInputs = ({ signInForm }: Props) => {
-  const hasError = !!signInForm.formState.errors.root;
-
   return (
     <>
       <div className="space-y-2">
@@ -27,9 +25,8 @@ const SignInInputs = ({ signInForm }: Props) => {
       <div className="space-y-2">
         <Input
           className="!text-base bg-input-background"
-          type={hasError ? "text" : "password"}
+          type={"password"}
           placeholder="Password"
-          autoComplete={hasError ? "off" : "current-password"}
           {...signInForm.register("password")}
         />
         {signInForm.formState.errors.password && (

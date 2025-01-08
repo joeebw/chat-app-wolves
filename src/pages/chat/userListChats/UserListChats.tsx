@@ -4,111 +4,19 @@ import { useMultipleBlockStatus } from "@/hooks/useMultipleBlockStatus";
 import { useStore } from "@/store/useStore";
 import { Chat } from "@/ts/types";
 import BlockedUserImg from "@/assets/blocked-user.png";
-import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
 import DropdownChat from "@/pages/chat/userListChats/DropdownChat";
 import ModalConfirmRemoveChat from "@/pages/chat/userListChats/ModalConfirmRemoveChat";
+import clsx from "clsx";
 
 type Props = {
   chatList: Chat[] | undefined;
 };
 
-const CHAT_LIST = [
-  {
-    id: 1,
-    name: "Ana García",
-    lastMessage: "¿Nos vemos mañana para el café?",
-  },
-  {
-    id: 2,
-    name: "Juan Pérez",
-    lastMessage: "El informe está listo, te lo envío ahora",
-  },
-  {
-    id: 3,
-    name: "María Rodríguez",
-    lastMessage: "Gracias por la ayuda con el proyecto",
-  },
-  {
-    id: 4,
-    name: "Carlos López",
-    lastMessage: "¿Tienes un momento para revisar esto?",
-  },
-  {
-    id: 5,
-    name: "Laura Martínez",
-    lastMessage: "No podré asistir a la reunión de hoy",
-  },
-  {
-    id: 6,
-    name: "Diego Sánchez",
-    lastMessage: "¿Viste los cambios que hice?",
-  },
-  {
-    id: 7,
-    name: "Sofia Torres",
-    lastMessage: "Confirmado para el viernes",
-  },
-  {
-    id: 8,
-    name: "Pablo Ruiz",
-    lastMessage: "Te envío los documentos en un momento",
-  },
-  {
-    id: 9,
-    name: "Elena Castro",
-    lastMessage: "¿Podemos reagendar para la próxima semana?",
-  },
-  {
-    id: 10,
-    name: "Miguel Flores",
-    lastMessage: "Ya resolví el problema del servidor",
-  },
-  {
-    id: 11,
-    name: "Carmen Díaz",
-    lastMessage: "¿Has visto el nuevo diseño?",
-  },
-  {
-    id: 12,
-    name: "Roberto Morales",
-    lastMessage: "Necesito tu feedback sobre esto",
-  },
-  {
-    id: 13,
-    name: "Isabel Vargas",
-    lastMessage: "La presentación fue un éxito",
-  },
-  {
-    id: 14,
-    name: "Fernando Jiménez",
-    lastMessage: "¿Tienes los datos actualizados?",
-  },
-  {
-    id: 15,
-    name: "Patricia Romero",
-    lastMessage: "Me encantó tu propuesta",
-  },
-  {
-    id: 16,
-    name: "Alejandro Herrera",
-    lastMessage: "¿Hablamos luego sobre el proyecto?",
-  },
-  {
-    id: 17,
-    name: "Victoria Luna",
-    lastMessage: "Acabo de enviar el correo",
-  },
-  {
-    id: 18,
-    name: "Gabriel Mendoza",
-    lastMessage: "¿Nos reunimos mañana a las 10?",
-  },
-];
-
 const UserListChats = ({ chatList }: Props) => {
   const setSelectedChatId = useStore((state) => state.setSelectedChatId);
   const setSelectedUserId = useStore((state) => state.setSelectedUserId);
   const currentUserId = useStore((state) => state.currentUser?.uid);
+  const selectedUserId = useStore((state) => state.selectedUserId);
 
   const blockStatuses = useMultipleBlockStatus(chatList, currentUserId!);
 
@@ -126,7 +34,12 @@ const UserListChats = ({ chatList }: Props) => {
 
           return (
             <div key={id} onClick={() => handleSelectUserIdAndChatId(id, uid)}>
-              <div className="flex items-center justify-between px-6 py-4 transition-all cursor-pointer hover:bg-gray-500">
+              <div
+                className={clsx(
+                  "flex items-center justify-between px-6 py-4 transition-all cursor-pointer hover:bg-gray-500",
+                  selectedUserId === uid && "bg-gray-500"
+                )}
+              >
                 <div className="flex items-center gap-2.5">
                   <Avatar className="w-14 h-14">
                     <AvatarImage src={isBlocked ? BlockedUserImg : photoURL} />

@@ -9,6 +9,7 @@ const useGetCurrentUserChats = () => {
     queryKey: ["currentUser Chats"],
     queryFn: () => getUserChats(currentUser!.uid),
     refetchInterval: 3 * 60 * 1000,
+    refetchIntervalInBackground: true,
     enabled: !!currentUser,
   });
 };

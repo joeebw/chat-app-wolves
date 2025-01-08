@@ -9,6 +9,7 @@ import SignUpInputs from "@/pages/login/SignUpInputs";
 import { signIn, signUp } from "@/lib/firebase";
 import { useNavigate } from "react-router";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -37,6 +38,7 @@ export type SignInFormData = z.infer<typeof signInSchema>;
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 
 const LoginPage = () => {
+  const [isLoadingGuest, setIsLoadingGuest] = useState(false);
   const navigate = useNavigate();
   const isSignIn = useStore((state) => state.isSignIn);
   const setIsSignIn = useStore((state) => state.setIsSignIn);
@@ -92,6 +94,15 @@ const LoginPage = () => {
         message: errorMessage,
       });
     }
+  };
+
+  const handleSignInGuest = async () => {
+    setIsLoadingGuest(true);
+    await handleSignIn({
+      email: import.meta.env.VITE_EMAIL,
+      password: import.meta.env.VITE_PASSWORD,
+    });
+    setIsLoadingGuest(false);
   };
 
   const handleSignUp = async (data: SignUpFormData) => {
@@ -158,15 +169,31 @@ const LoginPage = () => {
             <SignUpInputs signUpForm={signUpForm} />
           )}
         </div>
-        <Button
-          type="submit"
-          variant="secondary"
-          className="w-full mt-7"
-          disabled={form.formState.isSubmitting}
-        >
-          {isLoading && <Loader2 className="animate-spin" />}
-          {isSignIn ? "Sign In" : "Sign Up"}
-        </Button>
+
+        <div className="flex gap-4">
+          <Button
+            type="submit"
+            variant="secondary"
+            className="w-full mt-7"
+            disabled={form.formState.isSubmitting}
+          >
+            {!isLoadingGuest && isLoading && (
+              <Loader2 className="animate-spin" />
+            )}
+            {isSignIn ? "Sign In" : "Sign Up"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full mt-7"
+            onClick={handleSignInGuest}
+            disabled={form.formState.isSubmitting}
+          >
+            {isLoadingGuest && <Loader2 className="animate-spin" />}
+            Continue as Guest
+          </Button>
+        </div>
+
         <p
           className="mt-5 text-sm underline cursor-pointer"
           onClick={() => {

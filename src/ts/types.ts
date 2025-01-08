@@ -28,7 +28,10 @@ export interface Chat {
   id: string;
   lastMessage: {
     content: string;
-    timestamp: Date;
+    timestamp: {
+      seconds: number;
+      nanoseconds: number;
+    };
   } | null;
   participants: string[];
   user: ChatUser;

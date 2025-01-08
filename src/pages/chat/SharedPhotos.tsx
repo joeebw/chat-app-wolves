@@ -57,10 +57,10 @@ const SharedPhotos = () => {
                     <div className="flex items-center gap-4">
                       <img
                         src={photo.imageUrl}
-                        alt="landscape"
+                        alt="image file"
                         className="object-cover w-10 h-10 rounded-sm"
                       />
-                      <span className="text-sm">{photo.fileName}</span>
+                      <span className="text-sm truncate">{photo.fileName}</span>
                     </div>
                     <Button
                       size="icon"
